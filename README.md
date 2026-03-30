@@ -1,13 +1,16 @@
 # WebQuery
 
-Aplicação de console para executar queries web em lote a partir de uma planilha Excel e salvar resultados em `resultado.xlsx`.
 
+<img width="1112" height="628" alt="image" src="https://github.com/user-attachments/assets/bf969eaa-ca19-4920-9aa6-aae9c4486fa5" />
+
+
+Aplicação de console para executar queries web em lote a partir de uma planilha Excel e salvar resultados em diversos formatos de arquivos diferentes
 ## Descrição
 
 `WebQuery` é uma ferramenta de linha de comando que: 
 - Executa requisições HTTP (GET/POST) para APIs com base em entradas de uma planilha Excel.
-- Agrega respostas JSON em uma planilha de saída (`resultado.xlsx`).
-- Suporta salvar, listar e excluir queries pré-configuradas via `config.json`.
+- Agrega as respostas das requisições em arquivos xlsx, xml, kml, json, txt dentre outros.
+- Suporta salvar, listar e excluir buscas pré-configuradas via `config.json`.
 - Usa um token Bearer para autenticação nas requisições.
 
 ## Requisitos
@@ -15,25 +18,6 @@ Aplicação de console para executar queries web em lote a partir de uma planilh
 - .NET 10
 - C# 14
 - Pacote NuGet: `ClosedXML` (para leitura/escrita de Excel)
-
-## Como compilar e executar
-
-1. Abra um terminal na pasta do projeto (onde está o arquivo `WebQuery.csproj`).
-
-2. Restaurar dependências e compilar:
-
-```bash
-dotnet restore
-dotnet build -c Release
-```
-
-3. Executar:
-
-```bash
-dotnet run --project WebQuery
-```
-
-Ao executar, a aplicação criará um arquivo `config.json` na pasta atual caso não exista.
 
 ## Estrutura de configuração (`config.json`)
 
