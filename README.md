@@ -1,4 +1,4 @@
-# Documento de Contexto — WebQuery
+# —WebQuery
 
 <img width="1112" height="628" alt="image" src="https://github.com/user-attachments/assets/d663598e-9691-4246-bb34-be1ba483ce08" />
 
@@ -105,7 +105,7 @@ O programa compara o IP da máquina com os campos `Ip` para identificar o nome d
 ---
 
 
-## 8. Segurança e privacidade
+## 7. Segurança e privacidade
 
 - `Tokenid` é armazenado em `config.json` sem criptografia. Evitar comitá-lo em repositórios remotos.
 - O projeto busca um JSON de licenças em um repositório público; garanta que esse arquivo não exponha informações sensíveis.
@@ -113,25 +113,7 @@ O programa compara o IP da máquina com os campos `Ip` para identificar o nome d
 
 ---
 
-## 9. Testes e depuração
-
-- Não existem testes automatizados no repositório; criar testes unitários para as funções críticas (parsing, ClearResponse64, Init/Read config, GetIp) é recomendado.
-- Para depuração local: executar no Visual Studio com ponto de interrupção em `Main` e inspecionar `config.json` e respostas HTTP.
-
----
-
-## 10. Melhoria sugeridas (prioritárias)
-
-1. Melhorar parsing de respostas (JSON vs Base64) usando tentativa de desserialização com `JsonDocument`/`JsonSerializer`.
-2. Padronizar leitura de entradas do usuário (usar sempre `Console.ReadLine` ou um helper) para evitar inconsistências.
-3. Melhor tratamento de erros e logs (ex.: adicionar logger, incluir mensagens de erro detalhadas no console e arquivos).
-4. Não armazenar tokens em texto puro ou incluir opção de criptografia/KeyVault.
-5. Refatorar `Program.cs` em módulos menores (serviço HTTP, serviço de I/O, serviço de licenças, modelos) para facilitar manutenção e testes.
-6. Adicionar testes unitários.
-
----
-
-## 11. Mapa de arquivos e responsabilidades
+## 8. Mapa de arquivos e responsabilidades
 
 - `Program.cs` — lógica principal e menus.
 - `config.json` — persistência local (token + queries).
