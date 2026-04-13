@@ -1,129 +1,138 @@
-# —WebQuery
+
+# WebQuery
 
 <img width="1112" height="628" alt="image" src="https://github.com/user-attachments/assets/d663598e-9691-4246-bb34-be1ba483ce08" />
 
+Aplicação de console para execução em lote de buscas (queries) contra APIs usando entradas de planilhas Excel e geração de resultados em arquivos (planilhas ou binários).
 
-Última atualização: 2026-03-30
+Resumo rápido
+- Plataforma: .NET 10 (C# 14)
+- Propósito: automatizar longas buscas manuais repetitivas e demoradas com parâmetros vindos de planilha e salvar respostas como arquivos ou em planilhas.
+- Dependência principal: `ClosedXML` (leitura/escrita de Excel).
 
-Este documento reúne o contexto técnico e operacional do projeto `WebQuery` para facilitar manutenção, evolução e integração. Contém descrição da arquitetura, comportamento esperado, esquema de configuração, fluxos principais, dependências, pontos de atenção e propostas de melhoria.
+-----
 
----
+Índice
+- Visão geral
+- Recursos
+- Requisitos
+- Instalação e build
+- Uso (fluxo e exemplos)
+- Formato de `config.json`
+- Estrutura de pastas e arquivos gerados
+- Erros comuns e troubleshooting
 
-## 1. Visão geral
+-----
 
-`WebQuery` é uma aplicação de console (.NET 10, C# 14) para executar requisições HTTP (GET / POST) de forma programática, usando entradas de planilhas Excel como parâmetros, agregando e salvando resultados (JSON agregados em planilhas ou arquivos binários decodificados a partir de Base64). O projeto usa `ClosedXML` para leitura/escrita de arquivos Excel.
+Visão geral
+------------
+`WebQuery` permite definir buscas (queries) que chamam endpoints HTTP em massa usando um Bearer token configurado em `config.json`. As buscas podem ser:
+- baseadas em uma planilha de entrada: para cada linha a aplicação realiza a chamada e processa a resposta;
+- ou chamadas únicas diretas inserindo URL/método/body no fluxo interativo.
 
-Propósito: automatizar buscas em APIs a partir de uma lista de entradas (por exemplo, códigos/IDs) e gerar artefatos de saída (planilhas, arquivos KML, imagens, etc.).
+As respostas tratadas atualmente são de dois tipos principais:
+- JSON array (agregado para planilha de saída); ou
+- conteúdo Base64 (decodificado e salvo como arquivo usando a extensão informada).
 
----
+Recursos
+--------
+- Menu interativo via console para gerenciar e executar buscas.
+- CRUD básico de buscas salvas persistidas em `config.json`.
+- Leitura de planilhas Excel (.xlsx) usando `ClosedXML`.
+- Escrita de arquivos de resultado em pasta configurável (padrão `Resultados`).
+- Validação de licença simples via JSON remoto (comparação de IP da máquina).
 
-## 2. Arquitetura e principais componentes
-
-Arquivos relevantes
-- `Program.cs` — único arquivo com toda a lógica da aplicação (menu, I/O, chamadas HTTP, manipulação de Excel, persistência em `config.json`).
-- `config.json` — arquivo JSON na raiz usado para armazenar o token de autenticação e as queries (buscas) salvas.
-- `Resultados/` — pasta padrão (criada automaticamente) onde saem os arquivos gerados.
-- `README.md` — documentação básica do projeto.
-
-Principais classes (em `Program.cs`)
-- `JsonConfig` — modelo de configuração com propriedades `Queries[]` e `Tokenid`.
-- `Query` — modelo para buscas salvas: `Name`, `Url`, `Method`, `Body`, `Sheet`, `ReturnType`.
-- `Licences` e `User` — modelos usados na verificação de licença remota (conteúdo esperado em `licences.json`).
-
-Recursos e dependências
-- .NET 10 (target framework)
+Requisitos
+----------
+- .NET 10 SDK
 - C# 14
-- NuGet: `ClosedXML` para manipulação de Excel
+- Pacotes NuGet (instalados automaticamente com `dotnet restore`):
+  - `ClosedXML`
 
----
+Instalação e build
+------------------
+1. Clone o repositório:
 
-## 3. Fluxo de execução
+```powershell
+git clone https://github.com/Mateusdev3/WebQuery.git
+cd WebQuery
+```
 
-1. Ao iniciar, cria `config.json` se não existir, com `Tokenid` vazio.
-2. Cria pasta `Resultados` por padrão (nome pode ser alterado nas configurações do app e será criada quando necessário).
-3. Recupera o IP local da máquina e valida licença consultando um JSON remoto hospedado no GitHub (URL: `https://raw.githubusercontent.com/Mateusdev3/WebQuery/refs/heads/main/licences.json`). Se a licença correspondente ao IP não for encontrada, o programa encerra.
-4. Exibe menu interativo com opções para executar buscas salvas, executar novas buscas, gerenciar configurações e tokens, e gerenciar buscas salvas (CRUD básico).
-5. Execução de uma busca:
-   - Se um arquivo `Sheet` for informado, o programa abre a planilha (primeira worksheet) e para cada linha usa a 1ª coluna para substituir espaços no `Body` e chamar a API.
-   - A requisição pode ser `GET` (concatena `/{values}` ao `url`) ou `POST` (envia `Body` como JSON no corpo).
-   - Recebe a resposta e identifica dois cenários:
-     - Resposta JSON contendo um array (inferido por `response.Contains("[")`) — o código deserializa para `List<Dictionary<string,object>>`, agrega colunas e salva em uma planilha (`Resultado.{format}`) dentro da pasta de resultados.
-     - Resposta base64 (ou binária envolvida em string) — o código limpa a string (`ClearResponse64`), converte de Base64 e grava em arquivo com nome derivado da entrada (`{data}.{format}`).
-6. As buscas salvas são mantidas em `config.json` e podem ser adicionadas, listadas ou removidas via menu. Cada `Query` armazena também o `ReturnType` para definir a extensão do arquivo de saída.
+2. Restaurar dependências e compilar:
 
----
+```powershell
+dotnet restore
+dotnet build -c Release
+```
 
-## 4. Esquema de configuração (`config.json`)
+3. Executar:
 
-Estrutura esperada
+```powershell
+dotnet run --project WebQuery
+```
 
+Ao executar pela primeira vez o programa criará um `config.json` com campo `Tokenid` vazio e a pasta `Resultados` (padrão).
+
+Uso (fluxo e exemplos)
+----------------------
+Ao iniciar, o programa:
+1. Valida licença consultando um JSON remoto com mapeamento de IPs para nomes de usuário;
+2. Exibe menu principal com opções para executar buscas salvas, criar uma nova busca, gerenciar buscas e atualizar token.
+
+Menu principal (resumo):
+- `[1] Realizar busca salva` — escolhe uma busca salva por índice e a executa;
+- `[2] Realizar nova busca` — solicita URL, método (GET/POST), body, planilha de entrada (opcional) e tipo de retorno (extensão); executa imediatamente;
+- `[3] Configurações` — editar nome da pasta de resultados, inserir delay entre requisições (placeholder);
+- `[4] Gerenciar buscas salvas` — salvar nova busca, listar ou excluir buscas;
+- `[5] Atualizar Token` — inserir novo token e testar validade.
+
+Exemplo prático
+1. Adicionar token: selecione `Atualizar Token` e insira o token (cuidado para não versionar `config.json`).
+2. Salvar nova busca: `Gerenciar buscas salvas` → `Salvar nova busca` → preencha `Name`, `Url`, `Method`, `Body`, `Sheet` (opcional), `ReturnType` (ex.: `kml`, `png`, `xlsx`).
+3. Executar busca salva: `Realizar busca salva` → escolha índice.
+
+Quando a busca utiliza uma `Sheet`:
+- a aplicação abre a primeira planilha do arquivo e usa o valor da primeira coluna de cada linha substituindo espaços no `Body` (comportamento atual) para formar a requisição;
+- se a resposta for um JSON array, os objetos são agregados e exportados para uma planilha `Resultado.{ReturnType}`;
+- se a resposta for conteúdo em Base64, cada resultado é decodificado e salvo como `{input}.{ReturnType}` na pasta de resultados.
+
+Formato de `config.json`
+----------------------
+Exemplo de `config.json` válido:
+
+```json
 {
   "Tokenid": "",
   "Queries": [
     {
-      "Name": "exemplo",
+      "Name": "BuscarKML",
       "Url": "https://api.exemplo/endpoint",
       "Method": "POST",
-      "Body": "{\"param\": \"valor\"}",
+      "Body": "{\"codigo\": \"\"}",
       "Sheet": "entrada.xlsx",
       "ReturnType": "kml"
     }
   ]
 }
+```
 
-Observações:
-- `Tokenid` é usado como Bearer token em todas as requisições.
-- `Queries` é um array opcional; o programa cria `config.json` com `Tokenid` vazio caso não exista.
+Campos importantes:
+- `Tokenid`: token Bearer usado nas requisições;
+- `Queries`: array de objetos com `Name`, `Url`, `Method`, `Body`, `Sheet` e `ReturnType`.
 
----
+Estrutura de pastas e arquivos gerados
+------------------------------------
+- `config.json` — arquivo de configuração e armazenamento de buscas salvas.
+- `Resultados/` (padrão) — pasta onde os arquivos gerados são salvos. Pode ser alterada nas configurações do app.
+- Exemplo de saída:
+  - `Resultados/Resultado.kml` (quando respostas JSON são agregadas e `ReturnType` é `kml`);
+  - `Resultados/123.kml` (quando resultado por linha é Base64 convertido em arquivo `kml`).
 
-## 5. Exemplo de uso
+Erros comuns e troubleshooting
+------------------------------
+- Programa encerra por licença não encontrada
+- Token inválido: vá em `Atualizar Token` e use `Testar token salvo` para checar validade.
+- Arquivo de planilha não encontrado: informe o caminho correto em `Sheet` ou coloque a planilha no mesmo diretório do executável.
 
-1. Adicionar token: menu `Atualizar Token` > Inserir novo token (validação simples de tamanho 36 caracteres).
-2. Salvar nova busca: menu `Gerenciar buscas salvas` > `Salvar nova busca`.
-3. Executar busca salva: menu `Realizar busca salva` > escolher índice.
-4. Executar busca direta: menu `Realizar nova busca` > inserir URL, método, body, sheet (opcional), tipo de retorno.
-
-Outputs:
-- Planilha com resultados agregados: `Resultados/Resultado.{ReturnType}` (cuando o retorno é JSON array e o formato é definido).
-- Arquivos individuais (por linha) quando API retorna Base64: `Resultados/{input}.{ReturnType}`.
-
----
-
-## 6. Formato do JSON de licença esperado
-
-O repositório remoto deve expor um JSON com esta estrutura:
-
-{
-  "Licences": [
-    { "Ip": "192.168.0.1", "Name": "Nome do Usuário" }
-  ]
-}
-
-O programa compara o IP da máquina com os campos `Ip` para identificar o nome do usuário/autorização.
-
----
-
-
-## 7. Segurança e privacidade
-
-- `Tokenid` é armazenado em `config.json` sem criptografia. Evitar comitá-lo em repositórios remotos.
-- O projeto busca um JSON de licenças em um repositório público; garanta que esse arquivo não exponha informações sensíveis.
-- As requisições usam Bearer token em headers; valide e proteja o token conforme políticas de TI.
-
----
-
-## 8. Mapa de arquivos e responsabilidades
-
-- `Program.cs` — lógica principal e menus.
-- `config.json` — persistência local (token + queries).
-- `Resultados/` — saída de arquivos.
-- `README.md` — documentação de projeto (visão geral).
-- `CONTEXT.md` — este documento de contexto.
-
----
-
-
----
 
 
