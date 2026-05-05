@@ -1,4 +1,5 @@
-﻿# WebQuery
+﻿
+# WebQuery
 
 ![C#](https://img.shields.io/badge/C%23-512BD4?style=for-the-badge\&logo=csharp\&logoColor=white)
 ![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge\&logo=dotnet\&logoColor=white)
@@ -168,7 +169,7 @@ cd WebQuery
 
 Restaure as dependências:
 
-```bash
+```powershell
 dotnet restore
 ```
 
@@ -180,7 +181,7 @@ dotnet build
 
 Execute a aplicação:
 
-```bash
+```powershell
 dotnet run --project WebQuery
 ```
 
@@ -189,6 +190,10 @@ dotnet run --project WebQuery
 Ao iniciar pela primeira vez, o sistema cria automaticamente um arquivo `config.json` no diretório de execução.
 
 Exemplo de estrutura:
+
+Formato de `config.json`
+----------------------
+Exemplo de `config.json` válido:
 
 ```json
 {
@@ -334,6 +339,5 @@ Este projeto demonstra conhecimentos em:
 
 Desenvolvido por **Mateus Esteves**.
 
-## Licença
 
 Este projeto está sob a licença MIT. Sinta-se à vontade para usar, estudar e adaptar.
