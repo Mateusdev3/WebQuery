@@ -1,4 +1,4 @@
-# WebQuery
+﻿# WebQuery
 
 ![C#](https://img.shields.io/badge/C%23-512BD4?style=for-the-badge\&logo=csharp\&logoColor=white)
 ![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge\&logo=dotnet\&logoColor=white)
@@ -35,8 +35,6 @@ A aplicação funciona por menus no terminal e foi pensada para cenários operac
 ### Seleção de busca salva
 
 ![Seleção de busca salva](./docs/screenshots/busca-salva.png)
-
-
 
 ## Funcionalidades
 
