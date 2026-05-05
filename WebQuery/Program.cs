@@ -10,6 +10,8 @@ namespace Program
     {
         public Query[]? Queries { get; set; }
         public string? Tokenid { get; set; }
+        public string UrlCheckToken { get; set; }
+        public int? ForceDelay { get; set; }
     }
 
     public class Licences
@@ -42,7 +44,9 @@ namespace Program
             {
                 var jsonConfig = new JsonConfig
                 {
-                    Tokenid = ""
+                    Tokenid = "",
+                    UrlCheckToken = "",
+                    ForceDelay = 0
                 };
                 var options = new JsonSerializerOptions
                 {
@@ -357,7 +361,7 @@ namespace Program
                 foreach (var linha in workseet.RowsUsed())
                 {
                     string data = linha.Cell(1).GetString();
-                    string obj = body.Replace(" ", data);
+                    string obj = body.Replace("*", data);
 
                     string response = await RealizeQuery(httpClient, url, method, obj);
 
@@ -610,6 +614,7 @@ namespace Program
             Console.WriteLine("                         ");
             Console.WriteLine("[1] Editar nome da pasta de resultados");
             Console.WriteLine("[2] Inserir delay a cada requisição");
+            Console.WriteLine("[3] Inserir url para validação de token");
             Console.WriteLine("[0] Voltar");
             var option = Console.ReadKey(true);
             string op = option.Key.ToString();
@@ -627,6 +632,46 @@ namespace Program
                     break;
 
                 case "D2" or "NumPad2":
+                    Console.WriteLine("────────────────────────────────────────────────────────────────");
+                    Console.WriteLine(" ");
+                    Console.Write("Insira o delay desejado: ");
+                    string numberOfdelay = Console.ReadLine();
+                    if(numberOfdelay != null || numberOfdelay != " ")
+                    {
+                        string filePath = "config.json";
+                        string configString = File.ReadAllText(filePath);
+                        var jsonDes = JsonSerializer.Deserialize<JsonConfig>(configString);
+
+                        int delay = int.Parse(numberOfdelay);
+
+                        if(delay is int)
+                        {
+                            jsonDes.ForceDelay = delay;
+                        }
+                        var options = new JsonSerializerOptions { WriteIndented = true };
+
+                        var jsonUpdate = JsonSerializer.Serialize<JsonConfig>(jsonDes, options);
+                        File.WriteAllText(filePath, jsonUpdate);
+
+                        Console.WriteLine("Delay Salvo com sucesso.");
+                        await Task.Delay(2000);
+                        await Settings();
+                        
+                    } else
+                    {
+                        await Settings();
+                    }
+                    break;
+
+                case "D3" or "NumPad3": 
+                    Console.WriteLine("────────────────────────────────────────────────────────────────");
+                    Console.WriteLine(" ");
+                    Console.Write("Digite a url desejada: ");
+                    string url = Console.ReadLine();
+                    if(url.Length <= 1) { await Settings(); }
+                    await WriteTokenUrl(url);
+                    Console.WriteLine("Url salva!");
+                    await Task.Delay(2000);
                     await Settings();
                     break;
 
@@ -638,6 +683,23 @@ namespace Program
                     await Initialize();
                     break;
             }
+        }
+
+        private static async Task WriteTokenUrl(string url)
+        {
+
+            string fileName = "config.json";
+            string json = File.ReadAllText(fileName);
+
+            var jsonDes = JsonSerializer.Deserialize<JsonConfig>(json);
+
+            jsonDes.UrlCheckToken = url;
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+
+            var updateJson = JsonSerializer.Serialize<JsonConfig>(jsonDes, options);
+
+            File.WriteAllText(fileName, updateJson);
         }
         private static async Task ShowAllQueries()
         {
